@@ -34,4 +34,7 @@ feature label predictons
 (13,[non zero index],[values at those index] , actual yeild , predicted yeild )
 (13, [5,9,11],[1.0,1.0..],4.60,4.17)
 
+streamlit run app.py
+
+
 

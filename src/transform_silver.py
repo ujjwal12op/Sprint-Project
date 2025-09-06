@@ -19,6 +19,9 @@ def main():
     # 1. Handle Missing Values
     # -------------------
     # Example: fill numeric cols with mean
+    # identify all numeric columns
+    # calculate mean 
+    # if mean is not None, fill na with mean
     numeric_cols = [f.name for f in df.schema.fields if isinstance(f.dataType, NumericType)]
     for col in numeric_cols:
         try:
@@ -57,6 +60,13 @@ def main():
     # -------------------
     # 4. Save Silver Layer (partitioned)
     # -------------------
+
+    
+#     ✅ Iska fayda kya hai?
+
+# Fast querying: Agar tu sirf "Rice" crop aur "North" region ka data chahiye, to Spark sirf wahi folder padhega.
+# Organized storage: Data clean aur structured hota hai.
+# Scalable: Future mein agar aur crops ya regions aaye, to easily add ho sakte hain.
     silver_path = os.path.join("..","data", "silver", "crop_yield_v8")
     (
         df.write

@@ -1,4 +1,5 @@
 # src/enrich_gold.py
+# Purpose: Silver layer se data leke ML model ke liye features encode karna, vector banana, aur Gold layer mein save karna
 import os
 from pyspark.sql import functions as F
 from pyspark.ml.feature import StringIndexer, OneHotEncoder, VectorAssembler
@@ -35,6 +36,9 @@ def main():
     #Convert string categories into numeric vectors
     # - Why: ML algorithms need numerical input; this preserves category information without imposing ordinal relationships.
 
+#     ➡️ Categorical columns ko pehle index kiya (string → number), fir one-hot encode kiya (number → vector).
+#     ➡️ ML models ko numbers chahiye hote hain, strings nahi.
+
     for cat_col in categorical_cols:
         indexer = StringIndexer(inputCol=cat_col, outputCol=cat_col + "_idx", handleInvalid="keep")
         encoder = OneHotEncoder(inputCols=[cat_col + "_idx"], outputCols=[cat_col + "_vec"])
@@ -44,8 +48,7 @@ def main():
     # 3. Assemble Features
     # -------------------
 
-    ##  Combine all encoded categorical and numeric features into a single feature vector.
-    ##  - Why: This is the standard input format for Spark ML models.
+    #  Sab encoded categorical + numeric features ko ek single vector mein combine kiya — ye vector   ML model ka input hota hai.
 
     feature_cols = [c + "_vec" for c in categorical_cols] + numeric_cols
     assembler = VectorAssembler(inputCols=feature_cols, outputCol="features")
@@ -62,7 +65,7 @@ def main():
     # Final Gold dataset
     ## Extract the final feature vector and target column
     ## -  This gold_df is now ready for training a supervised ML model like logistic regression, decision trees, etc.
-    gold_df = df_transformed.select("features", F.col(target_col).alias("label"))
+    gold_df = df_transformed.select(*categorical_cols,*numeric_cols,"features", F.col(target_col).alias("label"))
 
     print("✅ Gold Dataset Ready")
     gold_df.show(5, truncate=False)
@@ -71,7 +74,7 @@ def main():
     # 4. Save Gold Layer
     # -------------------
     gold_path = os.path.join("..","data", "gold", "crop_yield_v8")
-    gold_df.repartition(1).write.mode("overwrite").parquet(gold_path)
+    gold_df.write.mode("overwrite").parquet(gold_path)
 
     print(f"✅ Gold data saved at: {gold_path}")
     spark.stop()
